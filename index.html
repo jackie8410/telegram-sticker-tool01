@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Telegram贴图格式转换工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f4f4f4;
+      text-align: center;
+    }
+    #preview {
+      margin-top: 20px;
+      max-width: 100%;
+      border: 1px solid #ccc;
+    }
+    .btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input[type="file"] {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🖼 Telegram 贴图格式转换工具</h2>
+  <p>上传图片 → 自动等比例缩放 → 下载为 WebP 格式</p>
+
+  <input type="file" id="upload" accept="image/*" class="btn">
+  <br>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <img id="preview" alt="预览图像">
+
+  <br>
+  <button id="download" class="btn">⬇️ 下载为 WebP 格式</button>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const preview = document.getElementById('preview');
+    const download = document.getElementById('download');
+
+    let img = new Image();
+
+    upload.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        img.onload = function () {
+          const maxSize = 512;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxSize) {
+              height = height * (maxSize / width);
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = width * (maxSize / height);
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          preview.src = canvas.toDataURL('image/webp');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    download.addEventListener('click', () => {
+      canvas.toBlob(function (blob) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'telegram_sticker.webp';
+        link.click();
+      }, 'image/webp', 0.95);
+    });
+  </script>
+</body>
+</html>
